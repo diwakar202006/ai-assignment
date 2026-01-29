@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tic Tac Toe – Minimax AI</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    .game {
+        text-align: center;
+    }
+    .board {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        grid-gap: 5px;
+        margin: 20px auto;
+    }
+    .cell {
+        width: 100px;
+        height: 100px;
+        font-size: 40px;
+        background: white;
+        border: 2px solid #333;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .cell:hover {
+        background: #eee;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<div class="game">
+    <h2>Tic Tac Toe (Human vs AI)</h2>
+    <div class="board" id="board"></div>
+    <p id="status"></p>
+    <button onclick="resetGame()">Restart</button>
+</div>
+
+<script>
+const HUMAN = 'X';
+const AI = 'O';
+let board = Array(9).fill(null);
+const boardDiv = document.getElementById("board");
+const statusText = document.getElementById("status");
+
+function createBoard() {
+    boardDiv.innerHTML = "";
+    board.forEach((cell, index) => {
+        const div = document.createElement("div");
+        div.className = "cell";
+        div.innerText = cell ? cell : "";
+        div.addEventListener("click", () => humanMove(index));
+        boardDiv.appendChild(div);
+    });
+}
+
+function humanMove(index) {
+    if (board[index] || isTerminal(board)) return;
+    board[index] = HUMAN;
+    updateGame();
+    if (!isTerminal(board)) {
+        setTimeout(aiMove, 300);
+    }
+}
+
+function aiMove() {
+    let bestScore = -Infinity;
+    let move;
+    for (let i = 0; i < 9; i++) {
+        if (!board[i]) {
+            board[i] = AI;
+            let score = minimax(board, 0, false);
+            board[i] = null;
+            if (score > bestScore) {
+                bestScore = score;
+                move = i;
+            }
+        }
+    }
+    board[move] = AI;
+    updateGame();
+}
+
+function minimax(state, depth, isMaximizing) {
+    let result = checkWinner(state);
+    if (result !== null) {
+        if (result === AI) return 10 - depth;
+        if (result === HUMAN) return depth - 10;
+        return 0;
+    }
+
+    if (isMaximizing) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (!state[i]) {
+                state[i] = AI;
+                best = Math.max(best, minimax(state, depth + 1, false));
+                state[i] = null;
+            }
+        }
+        return best;
+    } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (!state[i]) {
+                state[i] = HUMAN;
+                best = Math.min(best, minimax(state, depth + 1, true));
+                state[i] = null;
+            }
+        }
+        return best;
+    }
+}
+
+function checkWinner(state) {
+    const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+    for (let [a,b,c] of wins) {
+        if (state[a] && state[a] === state[b] && state[a] === state[c]) {
+            return state[a];
+        }
+    }
+    if (state.every(cell => cell)) return "draw";
+    return null;
+}
+
+function isTerminal(state) {
+    return checkWinner(state) !== null;
+}
+
+function updateGame() {
+    createBoard();
+    const result = checkWinner(board);
+    if (result === HUMAN) statusText.innerText = "You Win!";
+    else if (result === AI) statusText.innerText = "AI Wins!";
+    else if (result === "draw") statusText.innerText = "Draw!";
+    else statusText.innerText = "Your Turn";
+}
+
+function resetGame() {
+    board = Array(9).fill(null);
+    statusText.innerText = "Your Turn";
+    createBoard();
+}
+
+createBoard();
+statusText.innerText = "Your Turn";
+</script>
+
+</body>
+</html>
